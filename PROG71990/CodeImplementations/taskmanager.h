@@ -16,3 +16,8 @@ void addTask();
 void deleteTask();
 void updateTask();
 void displayTask();
+void displayRange();
+void displayAll();
+void searchTask();
+void saveToFile();
+void loadFromFile();

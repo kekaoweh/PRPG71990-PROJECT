@@ -75,4 +75,71 @@ void displayTask() {
     }
     printf("Task not found!\n");
 }
+// Function to display a range of tasks
+void displayRange() {
+    int start, end, i;
+    printf("Enter start ID: ");
+    scanf("%d", &start);
+    printf("Enter end ID: ");
+    scanf("%d", &end);
+
+    for (i = 0; i < task_count; i++) {
+        if (tasks[i].id >= start && tasks[i].id <= end) {
+            printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+        }
+    }
+}
+
+// Function to display all tasks
+void displayAll() {
+    if (task_count == 0) {
+        printf("No tasks available.\n");
+        return;
+    }
+    printf("\n=== Task List ===\n");
+    for (int i = 0; i < task_count; i++) {
+        printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+    }
+}
+
+// Function to search for a task by description
+void searchTask() {
+    char keyword[MAX_DESC];
+    int found = 0;
+    printf("Enter keyword to search: ");
+    getchar();
+    fgets(keyword, MAX_DESC, stdin);
+    keyword[strcspn(keyword, "\n")] = 0;
+
+    for (int i = 0; i < task_count; i++) {
+        if (strstr(tasks[i].description, keyword)) {
+            printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+            found = 1;
+        }
+    }
+    if (!found) printf("No matching tasks found!\n");
+}
+
+// Function to save tasks to a file
+void saveToFile() {
+    FILE* file = fopen(FILENAME, "wb");
+    if (!file) {
+        printf("Error saving tasks!\n");
+        return;
+    }
+    fwrite(&task_count, sizeof(int), 1, file);
+    fwrite(tasks, sizeof(Task), task_count, file);
+    fclose(file);
+}
+
+// Function to load tasks from a file
+void loadFromFile() {
+    FILE* file = fopen(FILENAME, "rb");
+    if (!file) return;
+    fread(&task_count, sizeof(int), 1, file);
+    fread(tasks, sizeof(Task), task_count, file);
+    fclose(file);
+}
+
+
 
