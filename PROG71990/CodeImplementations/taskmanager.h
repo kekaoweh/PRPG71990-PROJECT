@@ -1,4 +1,5 @@
 #pragma once
+
 #define MAX_TASKS 100
 #define MAX_DESC 500
 #define FILENAME "tasks.dat"
@@ -20,4 +21,5 @@ void displayRange();
 void displayAll();
 void searchTask();
 void saveToFile();
-void loadFromFile();
+void loadFromFile();
+void flushInput();

@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS 
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +7,11 @@
 Task tasks[MAX_TASKS];
 int task_count = 0;
 
-// Function to add a new task
+void flushInput() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
 void addTask() {
     if (task_count >= MAX_TASKS) {
         printf("Task list is full!\n");
@@ -15,24 +19,33 @@ void addTask() {
     }
 
     printf("Enter task description: ");
-    fgets(tasks[task_count].description, MAX_DESC, stdin);
-    tasks[task_count].description[strcspn(tasks[task_count].description, "\n")] = 0; // Remove newline
+    if (!fgets(tasks[task_count].description, MAX_DESC, stdin)) {
+        printf("Error reading input.\n");
+        return;
+    }
+
+    tasks[task_count].description[strcspn(tasks[task_count].description, "\n")] = 0;
     tasks[task_count].id = task_count + 1;
     task_count++;
     printf("Task added successfully!\n");
 }
 
-// Function to delete a task
 void deleteTask() {
-    int id, i, found = 0;
+    int id, found = 0;
     printf("Enter task ID to delete: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1) {
+        printf("Invalid input!\n");
+        flushInput();
+        return;
+    }
+    flushInput();
 
-    for (i = 0; i < task_count; i++) {
+    for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
             found = 1;
             for (int j = i; j < task_count - 1; j++) {
                 tasks[j] = tasks[j + 1];
+                tasks[j].id = j + 1;
             }
             task_count--;
             printf("Task deleted successfully!\n");
@@ -42,17 +55,23 @@ void deleteTask() {
     if (!found) printf("Task not found!\n");
 }
 
-// Function to update an existing task
 void updateTask() {
-    int id, i;
+    int id;
     printf("Enter task ID to update: ");
-    scanf("%d", &id);
-    getchar();
+    if (scanf("%d", &id) != 1) {
+        printf("Invalid input!\n");
+        flushInput();
+        return;
+    }
+    flushInput();
 
-    for (i = 0; i < task_count; i++) {
+    for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
             printf("Enter new task description: ");
-            fgets(tasks[i].description, MAX_DESC, stdin);
+            if (!fgets(tasks[i].description, MAX_DESC, stdin)) {
+                printf("Error reading input.\n");
+                return;
+            }
             tasks[i].description[strcspn(tasks[i].description, "\n")] = 0;
             printf("Task updated successfully!\n");
             return;
@@ -61,13 +80,17 @@ void updateTask() {
     printf("Task not found!\n");
 }
 
-// Function to display a single task
 void displayTask() {
-    int id, i;
+    int id;
     printf("Enter task ID to display: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1) {
+        printf("Invalid input!\n");
+        flushInput();
+        return;
+    }
+    flushInput();
 
-    for (i = 0; i < task_count; i++) {
+    for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
             printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
             return;
@@ -75,22 +98,30 @@ void displayTask() {
     }
     printf("Task not found!\n");
 }
-// Function to display a range of tasks
-void displayRange() {
-    int start, end, i;
-    printf("Enter start ID: ");
-    scanf("%d", &start);
-    printf("Enter end ID: ");
-    scanf("%d", &end);
 
-    for (i = 0; i < task_count; i++) {
+void displayRange() {
+    int start, end;
+    printf("Enter start ID: ");
+    if (scanf("%d", &start) != 1) {
+        printf("Invalid input!\n");
+        flushInput();
+        return;
+    }
+    printf("Enter end ID: ");
+    if (scanf("%d", &end) != 1) {
+        printf("Invalid input!\n");
+        flushInput();
+        return;
+    }
+    flushInput();
+
+    for (int i = 0; i < task_count; i++) {
         if (tasks[i].id >= start && tasks[i].id <= end) {
             printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
         }
     }
 }
 
-// Function to display all tasks
 void displayAll() {
     if (task_count == 0) {
         printf("No tasks available.\n");
@@ -102,13 +133,15 @@ void displayAll() {
     }
 }
 
-// Function to search for a task by description
 void searchTask() {
     char keyword[MAX_DESC];
     int found = 0;
+
     printf("Enter keyword to search: ");
-    getchar();
-    fgets(keyword, MAX_DESC, stdin);
+    if (!fgets(keyword, MAX_DESC, stdin)) {
+        printf("Error reading input.\n");
+        return;
+    }
     keyword[strcspn(keyword, "\n")] = 0;
 
     for (int i = 0; i < task_count; i++) {
@@ -120,26 +153,41 @@ void searchTask() {
     if (!found) printf("No matching tasks found!\n");
 }
 
-// Function to save tasks to a file
 void saveToFile() {
     FILE* file = fopen(FILENAME, "wb");
     if (!file) {
-        printf("Error saving tasks!\n");
+        perror("Error opening file for writing");
         return;
     }
-    fwrite(&task_count, sizeof(int), 1, file);
-    fwrite(tasks, sizeof(Task), task_count, file);
+    if (fwrite(&task_count, sizeof(int), 1, file) != 1 ||
+        fwrite(tasks, sizeof(Task), task_count, file) != (size_t)task_count) {
+        printf("Error writing data to file!\n");
+    }
     fclose(file);
 }
 
-// Function to load tasks from a file
 void loadFromFile() {
     FILE* file = fopen(FILENAME, "rb");
     if (!file) return;
-    fread(&task_count, sizeof(int), 1, file);
-    fread(tasks, sizeof(Task), task_count, file);
+
+    int temp_count;
+    if (fread(&temp_count, sizeof(int), 1, file) != 1) {
+        fclose(file);
+        return;
+    }
+
+    if (temp_count < 0 || temp_count > MAX_TASKS) {
+        printf("Corrupt or invalid task file.\n");
+        fclose(file);
+        return;
+    }
+
+    if (fread(tasks, sizeof(Task), temp_count, file) != (size_t)temp_count) {
+        printf("Error reading task data.\n");
+        fclose(file);
+        return;
+    }
+
+    task_count = temp_count;
     fclose(file);
 }
-
-
-
