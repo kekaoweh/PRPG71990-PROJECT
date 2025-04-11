@@ -20,6 +20,7 @@ Implemented file handling functions :
 saveToFile()
 loadFromFile()
 flushInput()
+validateDate()
 
 Added error checking to prevent buffer overruns.
 Maintained the binary file format(tasks.dat).
