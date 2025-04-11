@@ -16,7 +16,7 @@ void flushInput() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-// Function to validate date format YYYY-MM-DD
+// function to validate date format YYYY-MM-DD
 int validateDate(const char* date) {
     if (strlen(date) != 10) return 0;
     if (date[4] != '-' || date[7] != '-') return 0;

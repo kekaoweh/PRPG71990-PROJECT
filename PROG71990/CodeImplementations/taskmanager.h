@@ -46,3 +46,4 @@ void searchTask();
 void saveToFile();
 void loadFromFile();
 void flushInput();
+int validateDate(const char* date);
