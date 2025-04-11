@@ -4,32 +4,73 @@
 #include <string.h>
 #include "taskmanager.h"
 
+// Programming principles (prog71990) group project - winter 2025
+// Kekachukwu Oweh, Heba Tufail, Leslie Lontsi
+
 Task tasks[MAX_TASKS];
 int task_count = 0;
 
+// function to flush input buffer 
 void flushInput() {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    while ((c = getchar()) != '\n' && c != EOF);  
 }
 
+// function to add a new task to the task list
 void addTask() {
     if (task_count >= MAX_TASKS) {
         printf("Task list is full!\n");
         return;
     }
 
+    // get task description
     printf("Enter task description: ");
     if (!fgets(tasks[task_count].description, MAX_DESC, stdin)) {
         printf("Error reading input.\n");
         return;
     }
 
-    tasks[task_count].description[strcspn(tasks[task_count].description, "\n")] = 0;
-    tasks[task_count].id = task_count + 1;
-    task_count++;
+    tasks[task_count].description[strcspn(tasks[task_count].description, "\n")] = 0; // remove newline character
+
+    tasks[task_count].id = task_count + 1; // assign task ID based on the current task count
+
+    // set task priority
+    printf("Enter task priority (L: Low, M: Medium, H: High): ");
+    char priority_input;
+    if (scanf(" %c", &priority_input) != 1 || (priority_input != 'L' && priority_input != 'M' && priority_input != 'H')) {
+        printf("Invalid priority input! Setting default priority to Low.\n");
+        tasks[task_count].p = L; // default to Low priority
+    }
+    else {
+        // assign priority based on user input
+        switch (priority_input) {
+        case 'L': tasks[task_count].p = L; break;
+        case 'M': tasks[task_count].p = M; break;
+        case 'H': tasks[task_count].p = H; break;
+        }
+    }
+
+    // set task status
+    printf("Enter task status (N: Not Started, I: In Progress, C: Completed): ");
+    char status_input;
+    if (scanf(" %c", &status_input) != 1 || (status_input != 'N' && status_input != 'I' && status_input != 'C')) {
+        printf("Invalid status input! Setting default status to Not Started.\n");
+        tasks[task_count].s = N; // default to Not Started status
+    }
+    else {
+        // assign status based on user input
+        switch (status_input) {
+        case 'N': tasks[task_count].s = N; break;
+        case 'I': tasks[task_count].s = I; break;
+        case 'C': tasks[task_count].s = C; break;
+        }
+    }
+
+    task_count++; 
     printf("Task added successfully!\n");
 }
 
+// function to delete a task by its ID
 void deleteTask() {
     int id, found = 0;
     printf("Enter task ID to delete: ");
@@ -40,21 +81,24 @@ void deleteTask() {
     }
     flushInput();
 
+    // search for the task to delete by ID
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
             found = 1;
+            // shift tasks down to remove the task
             for (int j = i; j < task_count - 1; j++) {
-                tasks[j] = tasks[j + 1];
-                tasks[j].id = j + 1;
+                tasks[j] = tasks[j + 1];  // move next task to current position
+                tasks[j].id = j + 1;      // update ID
             }
             task_count--;
             printf("Task deleted successfully!\n");
             break;
         }
     }
-    if (!found) printf("Task not found!\n");
+    if (!found) printf("Task not found!\n"); 
 }
 
+// function to update task details
 void updateTask() {
     int id;
     printf("Enter task ID to update: ");
@@ -65,14 +109,47 @@ void updateTask() {
     }
     flushInput();
 
+    // search for the task to update
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
+            // update task description
             printf("Enter new task description: ");
             if (!fgets(tasks[i].description, MAX_DESC, stdin)) {
                 printf("Error reading input.\n");
                 return;
             }
-            tasks[i].description[strcspn(tasks[i].description, "\n")] = 0;
+            tasks[i].description[strcspn(tasks[i].description, "\n")] = 0; // remove newline character
+
+            // update task priority
+            printf("Enter new task priority (L: Low, M: Medium, H: High): ");
+            char priority_input;
+            if (scanf(" %c", &priority_input) != 1 || (priority_input != 'L' && priority_input != 'M' && priority_input != 'H')) {
+                printf("Invalid priority input! Keeping previous priority.\n");
+            }
+            else {
+                // update priority based on user input
+                switch (priority_input) {
+                case 'L': tasks[i].p = L; break;
+                case 'M': tasks[i].p = M; break;
+                case 'H': tasks[i].p = H; break;
+                }
+            }
+
+            // update task status
+            printf("Enter new task status (N: Not Started, I: In Progress, C: Completed): ");
+            char status_input;
+            if (scanf(" %c", &status_input) != 1 || (status_input != 'N' && status_input != 'I' && status_input != 'C')) {
+                printf("Invalid status input! Keeping previous status.\n");
+            }
+            else {
+                // update status based on user input
+                switch (status_input) {
+                case 'N': tasks[i].s = N; break;
+                case 'I': tasks[i].s = I; break;
+                case 'C': tasks[i].s = C; break;
+                }
+            }
+
             printf("Task updated successfully!\n");
             return;
         }
@@ -80,6 +157,7 @@ void updateTask() {
     printf("Task not found!\n");
 }
 
+// function to display a specific task by ID
 void displayTask() {
     int id;
     printf("Enter task ID to display: ");
@@ -90,15 +168,20 @@ void displayTask() {
     }
     flushInput();
 
+    // search for and display task details by ID
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
-            printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c\n",
+                tasks[i].id, tasks[i].description,
+                (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
+                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')));
             return;
         }
     }
-    printf("Task not found!\n");
+    printf("Task not found!\n"); 
 }
 
+// function to display a range of tasks based on ID
 void displayRange() {
     int start, end;
     printf("Enter start ID: ");
@@ -115,13 +198,18 @@ void displayRange() {
     }
     flushInput();
 
+    // display tasks within the given ID range
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id >= start && tasks[i].id <= end) {
-            printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c\n",
+                tasks[i].id, tasks[i].description,
+                (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
+                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')));
         }
     }
 }
 
+// function to display all tasks
 void displayAll() {
     if (task_count == 0) {
         printf("No tasks available.\n");
@@ -129,10 +217,14 @@ void displayAll() {
     }
     printf("\n=== Task List ===\n");
     for (int i = 0; i < task_count; i++) {
-        printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+        printf("Task ID: %d | Description: %s | Priority: %c | Status: %c\n",
+            tasks[i].id, tasks[i].description,
+            (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
+            (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')));
     }
 }
 
+// function to search for tasks by keyword in the description
 void searchTask() {
     char keyword[MAX_DESC];
     int found = 0;
@@ -144,15 +236,20 @@ void searchTask() {
     }
     keyword[strcspn(keyword, "\n")] = 0;
 
+    // search tasks by description for the given keyword
     for (int i = 0; i < task_count; i++) {
         if (strstr(tasks[i].description, keyword)) {
-            printf("Task ID: %d | Description: %s\n", tasks[i].id, tasks[i].description);
+            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c\n",
+                tasks[i].id, tasks[i].description,
+                (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
+                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')));
             found = 1;
         }
     }
     if (!found) printf("No matching tasks found!\n");
 }
 
+// function to save tasks to a file
 void saveToFile() {
     FILE* file = fopen(FILENAME, "wb");
     if (!file) {
@@ -166,6 +263,7 @@ void saveToFile() {
     fclose(file);
 }
 
+// function to load tasks from a file
 void loadFromFile() {
     FILE* file = fopen(FILENAME, "rb");
     if (!file) return;
@@ -183,11 +281,9 @@ void loadFromFile() {
     }
 
     if (fread(tasks, sizeof(Task), temp_count, file) != (size_t)temp_count) {
-        printf("Error reading task data.\n");
-        fclose(file);
-        return;
+        printf("Error reading data from file!\n");
     }
 
-    task_count = temp_count;
+    task_count = temp_count; 
     fclose(file);
 }
