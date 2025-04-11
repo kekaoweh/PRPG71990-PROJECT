@@ -1,7 +1,8 @@
 #pragma once
 
 #define MAX_TASKS 100           
-#define MAX_DESC 500            
+#define MAX_DESC 500   
+#define MAX_DATE 12
 #define FILENAME "tasks.dat"    
 
 // Programming principles (prog71990) group project - winter 2025
@@ -25,6 +26,7 @@ typedef enum {
 typedef struct {
     int id;                   
     char description[MAX_DESC]; 
+    char date[MAX_DATE];
     Priority p;              //(Low/Medium/High)
     Status s;                //(Not Started/In Progress/Completed)
 } Task;

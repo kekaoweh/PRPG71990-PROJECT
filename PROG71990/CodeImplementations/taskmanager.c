@@ -13,7 +13,24 @@ int task_count = 0;
 // function to flush input buffer 
 void flushInput() {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);  
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+// Function to validate date format YYYY-MM-DD
+int validateDate(const char* date) {
+    if (strlen(date) != 10) return 0;
+    if (date[4] != '-' || date[7] != '-') return 0;
+
+    for (int i = 0; i < 10; i++) {
+        if ((i == 4 || i == 7) && date[i] != '-') {
+            return 0;
+        }
+        if (i != 4 && i != 7 && (date[i] < '0' || date[i] > '9')) {
+            return 0;
+        }
+    }
+
+    return 1;  // Valid date format
 }
 
 // function to add a new task to the task list
@@ -29,10 +46,27 @@ void addTask() {
         printf("Error reading input.\n");
         return;
     }
-
     tasks[task_count].description[strcspn(tasks[task_count].description, "\n")] = 0; // remove newline character
 
     tasks[task_count].id = task_count + 1; // assign task ID based on the current task count
+
+    // Get task date and validate format
+    char date_input[MAX_DATE];
+    printf("Enter task date (YYYY-MM-DD): ");
+    if (!fgets(date_input, MAX_DATE, stdin)) {
+        printf("Error reading input.\n");
+        return;
+    }
+    date_input[strcspn(date_input, "\n")] = 0; // Remove newline
+
+    // Validate date format
+    if (!validateDate(date_input)) {
+        printf("Invalid date format! Task date set to default (2025-01-01).\n");
+        strcpy(tasks[task_count].date, "2025-01-01");
+    }
+    else {
+        strcpy(tasks[task_count].date, date_input);
+    }
 
     // set task priority
     printf("Enter task priority (L: Low, M: Medium, H: High): ");
@@ -66,7 +100,7 @@ void addTask() {
         }
     }
 
-    task_count++; 
+    task_count++;
     printf("Task added successfully!\n");
 }
 
@@ -81,21 +115,40 @@ void deleteTask() {
     }
     flushInput();
 
-    // search for the task to delete by ID
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
             found = 1;
-            // shift tasks down to remove the task
+
+            // show task details before confirmation, including date
+            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c | Date: %s\n",
+                tasks[i].id, tasks[i].description,
+                (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
+                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')),
+                tasks[i].date);
+
+            // ask for confirmation
+            char confirm;
+            printf("Are you sure you want to delete this task? (y/n): ");
+            if (scanf(" %c", &confirm) != 1 || (confirm != 'y' && confirm != 'Y')) {
+                printf("Deletion cancelled.\n");
+                flushInput();
+                return;
+            }
+            flushInput();
+
+            // perform deletion
             for (int j = i; j < task_count - 1; j++) {
-                tasks[j] = tasks[j + 1];  // move next task to current position
-                tasks[j].id = j + 1;      // update ID
+                tasks[j] = tasks[j + 1]; // move next task to current position
+                tasks[j].id = j + 1;
             }
             task_count--;
             printf("Task deleted successfully!\n");
-            break;
+            return;
         }
     }
-    if (!found) printf("Task not found!\n"); 
+    if (!found) {
+        printf("Task not found!\n");
+    }
 }
 
 // function to update task details
@@ -171,14 +224,15 @@ void displayTask() {
     // search for and display task details by ID
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id == id) {
-            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c\n",
+            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c | Date: %s\n",
                 tasks[i].id, tasks[i].description,
                 (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
-                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')));
+                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')),
+                tasks[i].date);
             return;
         }
     }
-    printf("Task not found!\n"); 
+    printf("Task not found!\n");
 }
 
 // function to display a range of tasks based on ID
@@ -191,23 +245,25 @@ void displayRange() {
         return;
     }
     printf("Enter end ID: ");
-    if (scanf("%d", &end) != 1) {
-        printf("Invalid input!\n");
+    if (scanf("%d", &end) != 1 || end < start) {
+        printf("Invalid range!\n");
         flushInput();
         return;
     }
-    flushInput();
 
-    // display tasks within the given ID range
+    // loop through and display tasks within the given range
+    printf("Displaying tasks in range %d to %d:\n", start, end);
     for (int i = 0; i < task_count; i++) {
         if (tasks[i].id >= start && tasks[i].id <= end) {
-            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c\n",
+            printf("Task ID: %d | Description: %s | Priority: %c | Status: %c | Date: %s\n",
                 tasks[i].id, tasks[i].description,
                 (tasks[i].p == L ? 'L' : (tasks[i].p == M ? 'M' : 'H')),
-                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')));
+                (tasks[i].s == N ? 'N' : (tasks[i].s == I ? 'I' : 'C')),
+                tasks[i].date);
         }
     }
 }
+
 
 // function to display all tasks
 void displayAll() {
@@ -260,6 +316,10 @@ void saveToFile() {
         fwrite(tasks, sizeof(Task), task_count, file) != (size_t)task_count) {
         printf("Error writing data to file!\n");
     }
+    else {
+        printf("%d tasks saved successfully.\n", task_count);
+    }
+
     fclose(file);
 }
 

@@ -12,7 +12,7 @@ int main() {
     loadFromFile();
 
     do {
-        // display the menu for the user
+        // display the menu
         printf("\n=== Task Manager ===\n");
         printf("1. Add Task\n");
         printf("2. Delete Task\n");
@@ -31,7 +31,7 @@ int main() {
         }
         flushInput();
 
-        // handle menu option choices
+        // handle menu options
         switch (choice) {
         case 1: addTask();
             break;
